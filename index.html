@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tape Yaz</title>
+<style>
+:root{--bg:#e2e8f0;--card:#f8fafc;--text:#0f172a;--muted:#475569;--bd:rgba(0,0,0,.16);--pri:#3b82f6;--ok:#10b981;--c0:#0369a1;--c1:#be123c;--c2:#a16207;--c3:#7e22ce}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Verdana,sans-serif}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);min-height:100dvh;display:flex;flex-direction:column}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.logo{font-size:1.15rem;font-weight:700;color:var(--pri)}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{background:var(--bd);color:var(--text);border:0;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.8rem}
+.btn:hover{opacity:.85}.btn.p{background:var(--pri);color:#fff}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
+main{flex:1;display:flex;flex-direction:column;gap:10px;padding:12px;max-width:1400px;width:100%;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.drop{flex:1;min-width:200px;border:1px dashed var(--bd);padding:8px;border-radius:6px;text-align:center;color:var(--muted);cursor:pointer;position:relative;font-size:.85rem}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+#vidBox{display:none;width:220px;max-height:130px;background:#000;border-radius:6px;overflow:hidden;resize:both}
+#pv{width:100%;height:100%;object-fit:contain}
+.seek{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--muted)}
+.seek input{flex:1;accent-color:var(--pri)}
+.sps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media(max-width:800px){.sps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sp{min-width:0;background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;display:flex;align-items:center;gap:6px;border-left:3px solid}
+.sp label{font-size:.75rem;font-weight:700;white-space:nowrap}
+.sp input[type=text]{flex:1;min-width:0;background:var(--bg);border:1px solid var(--bd);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85rem}
+.sp input[type=color]{border:0;width:22px;height:22px;background:none;cursor:pointer}
+.editor{flex:1;min-height:420px;resize:vertical;overflow:hidden;padding:0}
+.eh{padding:8px 12px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.ew{position:relative;flex:1;min-height:340px;background:var(--bg);border-radius:0 0 10px 10px}
+.ed{position:absolute;inset:0;width:100%;height:100%;padding:14px;margin:0;border:0;font-family:ui-monospace,Menlo,Consolas,'Liberation Mono','Courier New',monospace;font-size:16px;line-height:1.6;letter-spacing:0;font-variant-ligatures:none;-webkit-text-size-adjust:100%;white-space:pre-wrap;overflow-wrap:break-word;tab-size:4;scrollbar-gutter:stable}
+#bd{display:none;color:var(--text);overflow-y:auto}
+.ew.pv #bd{display:block}.ew.pv #ta{display:none}
+#ta{background:transparent;color:var(--text);caret-color:var(--text);resize:none;outline:0;overflow-y:auto}
+#ta::placeholder{color:var(--muted);opacity:1}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);justify-content:center;align-items:center;z-index:9}
+.mc{background:var(--card);border:1px solid var(--bd);width:640px;max-width:94%;max-height:88vh;overflow-y:auto;border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.mh{display:flex;justify-content:space-between;font-weight:700}
+.x{background:0;border:0;color:var(--muted);font-size:1.4rem;cursor:pointer}
+.fg{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+.fg input,.fg select{background:var(--bg);border:1px solid var(--bd);color:var(--text);padding:6px;border-radius:6px}
+.themes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.th{padding:7px 2px;border-radius:5px;border:1px solid var(--bd);cursor:pointer;text-align:center;font-size:.72rem;font-weight:600}
+table{width:100%;border-collapse:collapse}td{padding:5px;border-bottom:1px solid var(--bd);font-size:.85rem}
+.key{background:var(--bg);border:1px solid var(--bd);color:var(--text);padding:4px 6px;border-radius:4px;cursor:pointer;text-align:center;width:130px;font-weight:700}
+.key.lis{border-color:var(--ok);color:var(--ok)}
+.help{font-size:.85rem;color:var(--muted);line-height:1.6;margin-bottom:8px}.help b,kbd{color:var(--text)}
+kbd{background:var(--bd);padding:1px 6px;border-radius:4px;font-family:inherit;font-weight:600}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🎙️ Tape Yaz</div>
+  <div class="row">
+    <button class="btn" onclick="openM('helpM')">❓ Nasıl Kullanılır?</button>
+    <button class="btn" onclick="openM('setM')">⚙️ Ayarlar &amp; Kısayollar</button>
+  </div>
+</header>
+<main>
+  <section class="card">
+    <div class="row">
+      <div class="drop"><span id="fname">📁 Ses veya Video Dosyası Seçin</span><input type="file" id="file" accept="audio/*,video/*" onchange="loadMedia(event)"></div>
+      <div id="vidBox"><video id="pv" playsinline></video></div>
+    </div>
+    <div class="seek"><span id="tcur">00:00</span><input type="range" id="seekR" min="0" max="0" step="0.1" value="0" aria-label="Konum" oninput="seekTo(+this.value)"><span id="tdur">00:00</span></div>
+    <div class="row" style="justify-content:center">
+      <button class="btn" onclick="run('rewind')">⏪ <span class="skl">3</span> sn (<span data-k="rewind"></span>)</button>
+      <button class="btn p" id="playBtn" onclick="run('togglePlay')">▶️ Oynat / Durdur (<span data-k="togglePlay"></span>)</button>
+      <button class="btn" onclick="run('forward')">⏩ <span class="skl">3</span> sn (<span data-k="forward"></span>)</button>
+      <button class="btn" onclick="run('slower')" title="Yavaşlat">−</button>
+      <span id="rateLbl" style="min-width:42px;text-align:center;font-size:.85rem">1x</span>
+      <button class="btn" onclick="run('faster')" title="Hızlandır">+</button>
+    </div>
+  </section>
+
+  <section class="sps">
+    <div class="sp" style="border-left-color:var(--c0)"><label style="color:var(--c0)">1:</label><input type="text" id="spXN" value="Şahıs-1" aria-label="Şahıs 1 adı"><input type="color" id="spXC" value="#0369a1"></div>
+    <div class="sp" style="border-left-color:var(--c1)"><label style="color:var(--c1)">2:</label><input type="text" id="spYN" value="Şahıs-2" aria-label="Şahıs 2 adı"><input type="color" id="spYC" value="#be123c"></div>
+    <div class="sp" style="border-left-color:var(--c2)"><label style="color:var(--c2)">3 (<span data-k="spZ"></span>):</label><input type="text" id="spZN" value="Şahıs-3" aria-label="Şahıs 3 adı"><input type="color" id="spZC" value="#a16207"></div>
+    <div class="sp" style="border-left-color:var(--c3)"><label style="color:var(--c3)">4 (<span data-k="spT"></span>):</label><input type="text" id="spTN" value="Şahıs-4" aria-label="Şahıs 4 adı"><input type="color" id="spTC" value="#7e22ce"></div>
+  </section>
+
+  <section class="card editor">
+    <div class="eh">
+      <span><b id="nextLbl" style="color:var(--text)"></b> (<span data-k="nextSpeaker"></span>) · <span id="wc">0 kelime</span></span>
+      <div class="row">
+        <button class="btn" id="pvBtn" onclick="togglePv()">🎨 Renkli görünüm</button>
+        <button class="btn" onclick="run('stamp')">⏱ Damga</button>
+        <button class="btn" onclick="copyText()">📋 Kopyala</button>
+        <button class="btn" onclick="clearAll()">🗑️ Temizle</button>
+        <select id="fmt" class="btn"><option value="docx" selected>Word (.docx)</option><option value="pdf">PDF</option><option value="txt">TXT</option></select>
+        <button class="btn p" onclick="run('exportF')">💾 Dışa Aktar</button>
+      </div>
+    </div>
+    <div class="ew">
+      <div id="bd" class="ed" aria-hidden="true"></div>
+      <textarea id="ta" class="ed" spellcheck="false" placeholder="Çözümlemeye başlamak için buraya yazın..."></textarea>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="helpM" onclick="if(event.target===this)closeM('helpM')"><div class="mc">
+  <div class="mh"><span>❓ Tape Yaz Kullanım Rehberi</span><button class="x" onclick="closeM('helpM')" aria-label="Kapat">&times;</button></div>
+  <div id="helpBody"></div>
+  <label class="help"><input type="checkbox" id="hideHelp" onchange="saveSoon()"> Açılışta bu pencereyi bir daha gösterme</label>
+</div></div>
+
+<div class="modal" id="setM" onclick="if(event.target===this)closeM('setM')"><div class="mc">
+  <div class="mh"><span>⚙️ Ayarlar &amp; Kısayollar</span><button class="x" onclick="closeM('setM')" aria-label="Kapat">&times;</button></div>
+  <div class="fg"><label>İleri / geri sarma süresi (sn)</label><input type="number" id="skipS" value="3" min="1" max="60"></div>
+  <div class="fg"><label>Duraklatınca otomatik geri sar (sn, 0 = kapalı)</label><input type="number" id="rpS" value="0" min="0" max="10" step="0.5"></div>
+  <div class="fg"><label>Tema (8 koyu, 8 açık)</label><div class="themes" id="themes"></div></div>
+  <div class="fg"><label>Klavye kısayolları (kutuya tıklayıp yeni tuşa basın, Esc iptal)</label>
+    <table><tbody id="scBody"></tbody></table>
+    <button class="btn" style="align-self:flex-start;margin-top:6px" onclick="resetSC()">↺ Varsayılana dön</button></div>
+</div></div>
+
+<div class="modal" id="nameM"><div class="mc">
+  <div class="mh"><span>💾 Dosya adı</span><button class="x" onclick="nameDone(null)" aria-label="Kapat">&times;</button></div>
+  <div class="fg"><input id="nameI" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();nameDone($('nameI').value)}"></div>
+  <div class="row"><button class="btn p" onclick="nameDone($('nameI').value)">Kaydet</button><button class="btn" onclick="nameDone(null)">İptal</button></div>
+</div></div>
+<div id="toast"></div>
+
+<script src="jszip.min.js" onerror="var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';document.head.appendChild(s)"></script>
+<script>
+const $=id=>document.getElementById(id),ta=$('ta'),bd=$('bd'),K=['X','Y','Z','T'],KEY='tapeYaz.v2';
+const ACTIONS={
+  nextSpeaker:['Enter'],spZ:['Ctrl+Enter'],spT:['Shift+Enter'],
+  togglePlay:['F4','Oynat / Durdur'],rewind:['F1','Geri sar'],forward:['F2','İleri sar'],
+  slower:['F5','Yavaşlat'],faster:['F6','Hızlandır'],stamp:['F9','Zaman damgası ekle'],
+  unstamp:['F10','Zaman damgasını kaldır'],gotoStamp:['','Satırdaki damgaya git'],exportF:['Ctrl+Alt+S','Dışa aktar']};
+const defSC=()=>Object.fromEntries(Object.entries(ACTIONS).map(([k,v])=>[k,v[0]]));
+const THEMES=[['Koyu Slate','#0f172a','#1e293b',1],['Koyu Zinc','#18181b','#27272a',1],['Obsidyen','#09090b','#18181b',1],['Gece Mavisi','#172554','#1e3a8a',1],['Orman','#064e3b','#065f46',1],['Koyu Mor','#3b0764','#581c87',1],['Bordo','#450a0a','#7f1d1d',1],['Kömür','#27272a','#3f3f46',1],
+['Açık Slate','#f1f5f9','#ffffff',0],['Açık Zinc','#f4f4f5','#ffffff',0],['Pastel Mavi','#eff6ff','#dbeafe',0],['Pastel Nane','#ecfdf5','#d1fae5',0],['Pastel Gül','#fff1f2','#ffe4e6',0],['Kehribar','#fefce8','#fef9c3',0],['Lavanta','#f5f3ff','#ede9fe',0],['Bulut Gri','#e2e8f0','#f8fafc',0]];
+const SPC={1:['#38bdf8','#f43f5e','#fbbf24','#c084fc'],0:['#0369a1','#be123c','#a16207','#7e22ce']};
+let media=null,url=null,rate=1,skip=3,rp=0,custom=false,theme=15,mediaName='',cap=null,sc=defSC(),st,tt,prev=[],ready=false,nameRes=null;
+
+const dn=i=>'Şahıs-'+(i+1);
+const nm=i=>$('sp'+K[i]+'N').value.trim()||dn(i);
+const names=()=>K.map((_,i)=>nm(i));
+const cols=()=>K.map(k=>$('sp'+k+'C').value);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const speakerOf=l=>names().findIndex(n=>l.startsWith(n+':'));
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1800)}
+function openM(id){$(id).style.display='flex'}function closeM(id){$(id).style.display='none'}
+function lbl(a){return a==='nextSpeaker'?nm(0)+' ↔ '+nm(1)+' nöbetleşe satır aç':a==='spZ'?'Satır aç: '+nm(2):a==='spT'?'Satır aç: '+nm(3):ACTIONS[a][1]}
+
+/* ---------- Kısayollar ---------- */
+const MODS=['Control','Shift','Alt','Meta'];
+function combo(e){if(MODS.includes(e.key))return'';
+  const k=e.code.startsWith('Key')?e.code.slice(3):e.code.startsWith('Digit')?e.code.slice(5):e.key===' '?'Space':e.key.length===1?e.key.toUpperCase():e.key;
+  return[e.ctrlKey&&'Ctrl',e.altKey&&'Alt',e.shiftKey&&'Shift',e.metaKey&&'Meta',k].filter(Boolean).join('+')}
+const pretty=c=>(c||'—').replace('ArrowLeft','←').replace('ArrowRight','→').replace('ArrowUp','↑').replace('ArrowDown','↓');
+function renderSC(){
+  document.querySelectorAll('[data-k]').forEach(e=>e.textContent=pretty(sc[e.dataset.k]));
+  document.querySelectorAll('.key').forEach(i=>{if(!cap||i!==cap.el)i.value=pretty(sc[i.dataset.a])});
+  document.querySelectorAll('[data-l]').forEach(e=>e.textContent=lbl(e.dataset.l));
+  renderHelp()}
+function startCap(el){endCap();cap={a:el.dataset.a,el};el.classList.add('lis');el.value='Tuşa basın…'}
+function endCap(){if(cap){cap.el.classList.remove('lis');cap=null}renderSC()}
+function assign(a,c){const o=Object.keys(sc).find(k=>k!==a&&sc[k]===c);
+  if(o){sc[o]=sc[a];toast(lbl(o)+' ile tuşlar değiştirildi')}sc[a]=c;saveSoon()}
+function resetSC(){sc=defSC();saveSoon();renderSC();toast('Kısayollar sıfırlandı')}
+addEventListener('keydown',e=>{
+  if(cap){e.preventDefault();if(e.key==='Escape'){endCap();return}const c=combo(e);if(!c)return;assign(cap.a,c);endCap();return}
+  if(e.key==='Escape'){if(nameRes)nameDone(null);closeM('helpM');closeM('setM');return}
+  const c=combo(e);if(!c)return;
+  const a=Object.keys(sc).find(k=>sc[k]&&sc[k]===c);if(!a)return;
+  const inTa=e.target===ta,typing=/INPUT|SELECT|TEXTAREA/.test(e.target.tagName);
+  if(['nextSpeaker','spZ','spT'].includes(a)&&!inTa)return;
+  if(typing&&!inTa&&!/^(Ctrl|Alt|Meta)|^F\d/.test(c))return;
+  e.preventDefault();run(a)});
+
+function run(a){({
+  nextSpeaker:()=>newLine(curSpeaker()===0?1:0),spZ:()=>newLine(2),spT:()=>newLine(3),
+  togglePlay,rewind:()=>skipT(-skip),forward:()=>skipT(skip),
+  slower:()=>setRate(rate-.25),faster:()=>setRate(rate+.25),stamp,unstamp,gotoStamp,exportF:exportFile})[a]()}
+
+/* ---------- Medya ---------- */
+function loadMedia(ev){const f=ev.target.files[0];if(!f)return;
+  if(media)media.pause();if(url)URL.revokeObjectURL(url);
+  url=URL.createObjectURL(f);mediaName=f.name.replace(/\.[^.]+$/,'');
+  const v=f.type.startsWith('video/');$('vidBox').style.display=v?'block':'none';
+  media=v?$('pv'):new Audio();media.src=url;media.playbackRate=rate;
+  media.ontimeupdate=media.onloadedmetadata=media.ondurationchange=upTime;
+  media.onplay=()=>$('playBtn').firstChild.textContent='⏸️ Duraklat / Oynat (';
+  media.onpause=()=>$('playBtn').firstChild.textContent='▶️ Oynat / Durdur (';
+  $('fname').textContent='Dosya: '+f.name}
+function noMedia(){toast('Önce bir ses veya video dosyası seçin')}
+function togglePlay(){if(!media)return noMedia();
+  if(media.paused)media.play();else{media.pause();if(rp)media.currentTime=Math.max(0,media.currentTime-rp)}}
+function skipT(s){if(!media)return noMedia();seekTo(media.currentTime+s)}
+function seekTo(t){if(!media)return;media.currentTime=Math.min(Math.max(0,t),media.duration||t)}
+function setRate(r){rate=Math.min(2,Math.max(.5,Math.round(r*4)/4));if(media)media.playbackRate=rate;$('rateLbl').textContent=rate+'x';renderHelp();saveSoon()}
+function fmt(s){s=Math.floor(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60,p=n=>String(n).padStart(2,'0');return(h?h+':'+p(m):p(m))+':'+p(r)}
+function upTime(){const d=media.duration||0;$('tcur').textContent=fmt(media.currentTime);$('tdur').textContent=fmt(d);$('seekR').max=d;$('seekR').value=media.currentTime}
+
+/* ---------- Editör ---------- */
+function lineRange(){const v=ta.value,p=ta.selectionStart,s=p?v.lastIndexOf('\n',p-1)+1:0;let e=v.indexOf('\n',p);if(e<0)e=v.length;return{s,e,line:v.slice(s,e)}}
+function curSpeaker(){const L=ta.value.slice(0,ta.selectionStart).split('\n');for(let i=L.length-1;i>=0;i--){const s=speakerOf(L[i]);if(s>-1)return s}return -1}
+function insert(t){ta.focus();if(!document.execCommand('insertText',false,t)){ta.setRangeText(t,ta.selectionStart,ta.selectionEnd,'end');refresh()}}
+function newLine(i){insert((ta.value?'\n':'')+nm(i)+': ')}
+function stamp(){if(!media)return noMedia();insert('['+fmt(media.currentTime)+'] ')}
+const STAMP=/\[(\d+):(\d{2})(?::(\d{2}))?\]/;
+function unstamp(){const{s,e,line}=lineRange(),nl=line.replace(/\[\d+:\d{2}(?::\d{2})?\]\s?/g,'');
+  if(nl===line)return toast('Bu satırda zaman damgası yok');
+  ta.focus();ta.setSelectionRange(s,e);if(nl==='')document.execCommand('delete');else insert(nl);refresh()}
+function gotoStamp(){const m=lineRange().line.match(STAMP);if(!m)return toast('Bu satırda zaman damgası yok');
+  if(!media)return noMedia();
+  seekTo(m[3]!==undefined?+m[1]*3600+ +m[2]*60+ +m[3]:+m[1]*60+ +m[2])}
+function colorize(){const n=names(),c=cols();
+  bd.innerHTML=ta.value.split('\n').map(l=>{const i=n.findIndex(x=>l.startsWith(x+':'));return'<span'+(i>-1?' style="color:'+c[i]+'"':'')+'>'+esc(l)+'</span>'}).join('\n')+'\n'}
+function togglePv(){const on=document.querySelector('.ew').classList.toggle('pv');$('pvBtn').textContent=on?'✏️ Yazmaya dön':'🎨 Renkli görünüm';if(on)colorize();else ta.focus()}
+function refresh(){colorize();$('nextLbl').textContent='Sıradaki: '+nm(curSpeaker()===0?1:0);
+  const t=ta.value.trim();$('wc').textContent=(t?t.split(/\s+/).length:0)+' kelime'}
+ta.addEventListener('input',refresh);ta.addEventListener('click',refresh);ta.addEventListener('keyup',refresh);
+function copyText(){const done=()=>toast('Metin panoya kopyalandı');
+  navigator.clipboard?.writeText(ta.value).then(done,()=>{ta.select();document.execCommand('copy');done()})||(ta.select(),document.execCommand('copy'),done())}
+function clearAll(){if(ta.value&&confirm('Tüm metin silinsin mi? Bu işlem geri alınamaz.')){ta.value='';refresh()}}
+if(!window.tapeYaz)addEventListener('beforeunload',e=>{if(ta.value.trim()){e.preventDefault();e.returnValue=''}});
+
+K.forEach((k,i)=>{const el=$('sp'+k+'N');prev[i]=el.value;
+  el.addEventListener('input',()=>{const o=prev[i].trim()||dn(i),n=el.value.trim()||dn(i);
+    if(o!==n)ta.value=ta.value.split('\n').map(l=>l.startsWith(o+':')?n+':'+l.slice(o.length+1):l).join('\n');
+    prev[i]=el.value;refresh();renderSC()});
+  $('sp'+k+'C').addEventListener('input',()=>{custom=true;applyCols();saveSoon()})});
+function applyCols(){cols().forEach((c,i)=>document.documentElement.style.setProperty('--c'+i,c));colorize();renderHelp()}
+
+/* ---------- Tema ---------- */
+$('themes').innerHTML=THEMES.map((t,i)=>`<div class="th" style="background:${t[1]};color:${t[3]?'#f1f5f9':'#0f172a'}" onclick="setTheme(${i})">${t[0]}</div>`).join('');
+function setTheme(i){theme=i;const t=THEMES[i],s=document.documentElement.style,d=t[3];
+  s.setProperty('--bg',t[1]);s.setProperty('--card',t[2]);s.setProperty('--text',d?'#f1f5f9':'#0f172a');
+  s.setProperty('--muted',d?'#94a3b8':'#475569');s.setProperty('--bd',d?'rgba(255,255,255,.14)':'rgba(0,0,0,.16)');
+  if(!custom)K.forEach((k,j)=>$('sp'+k+'C').value=SPC[d][j]);
+  applyCols();saveSoon()}
+
+/* ---------- Ayarlar, kayıt, yardım ---------- */
+$('skipS').onchange=()=>{skip=Math.max(1,parseInt($('skipS').value)||3);document.querySelectorAll('.skl').forEach(e=>e.textContent=skip);renderHelp();saveSoon()};
+$('rpS').onchange=()=>{rp=Math.max(0,parseFloat($('rpS').value)||0);renderHelp();saveSoon()};
+$('fmt').onchange=()=>{renderHelp();saveSoon()};
+$('scBody').innerHTML=Object.keys(ACTIONS).map(a=>`<tr><td data-l="${a}"></td><td><input class="key" readonly data-a="${a}"></td></tr>`).join('');
+$('scBody').onclick=e=>{const i=e.target.closest('.key');if(i)startCap(i)};
+$('scBody').addEventListener('focusout',()=>{if(cap)endCap()});
+/* Yalnızca ayarlar saklanır; metin ve şahıs adları her açılışta sıfırlanır */
+function saveSoon(){if(!ready)return;clearTimeout(st);st=setTimeout(()=>{try{
+  localStorage.setItem(KEY,JSON.stringify({cols:custom?cols():null,custom,theme,skip,rp,rate,sc,fmt:$('fmt').value,hideHelp:$('hideHelp').checked}))}catch(e){}},300)}
+function renderHelp(){
+  if(!$('helpBody'))return;
+  const k=a=>`<kbd>${esc(pretty(sc[a]))}</kbd>`,c=cols(),n=names(),chip=i=>`<b style="color:${c[i]}">${esc(n[i])}</b>`;
+  const f={docx:'Word (.docx)',pdf:'PDF',txt:'TXT'}[$('fmt').value];
+  const items=[
+   `<b>1. Medya:</b> Üstteki alandan ses veya video dosyası seçin. Video seçerseniz boyutlandırılabilir bir önizleme çıkar. Konum çubuğundan istediğiniz yere atlayabilirsiniz. Oynatma hızı şu an <b>${rate}x</b>: ${k('slower')} yavaşlatır, ${k('faster')} hızlandırır (0.5x–2x arası).`,
+   `<b>2. Şahıs satırları:</b> Şahıslar: ${chip(0)}, ${chip(1)}, ${chip(2)}, ${chip(3)}. Yazarken ${k('nextSpeaker')} ${chip(0)} ile ${chip(1)} arasında nöbetleşe yeni satır açar, ${k('spZ')} doğrudan ${chip(2)}, ${k('spT')} doğrudan ${chip(3)} satırı açar. Şahıs kutularından ad ve renk değiştirebilirsiniz; ad değişince metindeki eski satırlar da güncellenir. Şahıs adları her açılışta Şahıs-1…Şahıs-4'e döner.`,
+   `<b>3. Yazarken medya kontrolü:</b> Oynat/durdur: ${k('togglePlay')} · ${skip} sn geri: ${k('rewind')} · ${skip} sn ileri: ${k('forward')}. Duraklatınca otomatik geri sarma: <b>${rp>0?rp+' sn':'kapalı'}</b>.`,
+   `<b>4. Zaman damgası:</b> ${k('stamp')} imlece <kbd>[mm:ss]</kbd> ekler, ${k('unstamp')} imlecin olduğu satırdaki damgaları kaldırır. ${sc.gotoStamp?k('gotoStamp')+' ile satırdaki damganın anına atlanır.':'Satırdaki damganın anına atlamak için Ayarlar\'dan "Satırdaki damgaya git" işlevine bir kısayol atayabilirsiniz.'}`,
+   `<b>5. Dışa aktarma:</b> Seçili biçim: <b>${f}</b> (editörün üstündeki listeden değiştirebilirsiniz). ${k('exportF')} veya "Dışa Aktar" düğmesiyle kaydedilir; çıktı siyah ve renksizdir, şahıs adları Word ve PDF'te kalın yazılır.`,
+   `<b>6. Renkli görünüm:</b> Yazı alanı sade kalır; "Renkli görünüm" düğmesi metni şahıs renkleriyle gösterir.`,
+   `<b>7. Ayarlar:</b> Tema (şu an <b>${THEMES[theme][0]}</b>), sarma süresi ve tüm kısayollar Ayarlar'dan değiştirilebilir ve bu bilgisayarda hatırlanır. Metin kutusu ve şahıs adları ise her açılışta sıfırlanır; çıkmadan önce dışa aktarmayı unutmayın.`,
+   `<b>İpucu:</b> Space gibi yazıda kullandığınız tek tuşları kısayol yaparsanız o tuşu metne yazamazsınız; Ctrl/Alt veya F tuşları önerilir.`];
+  $('helpBody').innerHTML=items.map(x=>`<div class="help">${x}</div>`).join('')}
+(function init(){let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(d){custom=!!d.custom;if(custom&&d.cols)K.forEach((k,i)=>$('sp'+k+'C').value=d.cols[i]);
+    skip=d.skip||3;rp=d.rp||0;rate=d.rate||1;theme=d.theme??15;sc={...defSC(),...(d.sc||{})};
+    if(d.fmt)$('fmt').value=d.fmt;$('hideHelp').checked=!!d.hideHelp}
+  $('skipS').value=skip;$('rpS').value=rp;$('skipS').onchange();setRate(rate);setTheme(theme);renderSC();refresh();
+  ready=true;if(!$('hideHelp').checked)openM('helpM')})();
+
+/* ---------- Dışa aktarma ---------- */
+function lineParts(l){const i=speakerOf(l);if(i<0)return[null,l];const n=nm(i)+':';return[n,l.slice(n.length)]}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function askName(d){return new Promise(r=>{nameRes=r;$('nameI').value=d;openM('nameM');setTimeout(()=>{$('nameI').focus();$('nameI').select()},50)})}
+function nameDone(v){closeM('nameM');if(nameRes){const r=nameRes;nameRes=null;r(v)}}
+async function exportFile(){const text=ta.value;if(!text.trim())return toast('Dışa aktarılacak metin yok');
+  const f=$('fmt').value;let n=await askName((mediaName||'tape_yaz')+'_desifre');if(!n||!n.trim())return;
+  n=n.trim().replace(/[\\/:*?"<>|]/g,'_');
+  if(f==='txt')download(new Blob(['\ufeff'+text.replace(/\n/g,'\r\n')],{type:'text/plain;charset=utf-8'}),n+'.txt');
+  else if(f==='docx'){if(!window.JSZip)return toast('Word modülü yüklenemedi (jszip.min.js bulunamadı, internet gerekli)');
+    const run=(t,b)=>`<w:r><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>${b?'<w:b/>':''}<w:color w:val="000000"/><w:sz w:val="24"/></w:rPr><w:t xml:space="preserve">${esc(t)}</w:t></w:r>`;
+    const ps=text.split('\n').map(l=>{const[a,b]=lineParts(l);return`<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>${a?run(a,1):''}${b?run(b,0):''}</w:p>`}).join('');
+    const H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',z=new JSZip();
+    z.file('[Content_Types].xml',H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+    z.file('_rels/.rels',H+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+    z.file('word/document.xml',H+'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+ps+'</w:body></w:document>');
+    download(await z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),n+'.docx')}
+  else{const body=text.split('\n').map(l=>{const[a,b]=lineParts(l);return'<p>'+(a?'<b>'+esc(a)+'</b>':'')+esc(b)+'</p>'}).join('');
+    const css='@page{margin:20mm}body{font:12pt/1.5 Calibri,Arial,sans-serif;color:#000}p{margin:0 0 6pt;white-space:pre-wrap;min-height:1em}';
+    if(window.tapeYaz){const r=await window.tapeYaz.savePdf(n,'<!DOCTYPE html><html><head><meta charset="utf-8"><style>'+css+'</style></head><body>'+body+'</body></html>');toast(r?'PDF kaydedildi':'İptal edildi');return}
+    const fr=document.createElement('iframe');fr.style.cssText='position:fixed;width:0;height:0;border:0';document.body.appendChild(fr);
+    fr.srcdoc=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(n)}</title><style>${css}</style></head><body>${body}</body></html>`;
+    fr.onload=()=>{const old=document.title;document.title=n;const w=fr.contentWindow;
+      const end=()=>{document.title=old;setTimeout(()=>fr.remove(),500)};w.onafterprint=end;w.focus();w.print();setTimeout(end,120000)};
+    toast('Açılan pencerede "PDF olarak kaydet"i seçin')}}
+</script>
+</body>
+</html>
